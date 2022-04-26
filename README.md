@@ -1,3 +1,6 @@
+# THIS IS MODIFIED CODE FROM THE IC3NET GITHUB
+# https://github.com/ic3net/ic3net#start-of-content
+
 # IC3Net
 
 This repository contains reference implementation for IC3Net paper (accepted to ICLR 2019), **Learning when to communicate at scale in multiagent cooperative and competitive tasks**, available at [https://arxiv.org/abs/1812.09755](https://arxiv.org/abs/1812.09755)
