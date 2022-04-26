@@ -1,0 +1,13 @@
+Task:		7x7 PP
+Grid:		Grid_7x7_PP.csv
+Dim:		7x7
+Nagents:	3
+Max Steps:	100
+Vision:		2
+NEpochs:	300
+Model:		CommNet
+
+Success Function:
+nb_predator_on_prey == self.npredator
+
+

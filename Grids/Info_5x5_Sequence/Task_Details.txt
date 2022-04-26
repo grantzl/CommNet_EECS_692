@@ -1,0 +1,15 @@
+Task:		5x5 PP
+Grid:		Grid_5x5_PP.csv
+Dim:		5x5
+Nagents:	3
+Max Steps:	20
+Vision:		2
+NEpochs:	300
+Model:		CommNet
+
+Success Function:
+nb_predator_on_prey == self.npredator
+
+Terminal Command:
+python main.py --env_name predator_prey --nagents 3 --nprocesses 1 --num_epochs 1000 --hid_size 128 --detach_gap 10 --lrate 0.001 --max_steps 20 --commnet --vision 2 --recurrent --plot --plot_env main --dim 5 --dim_col 5 --load_grid Grid_5x5_PP.csv --save Model_5x5_PP
+

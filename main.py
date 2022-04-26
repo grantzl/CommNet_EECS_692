@@ -143,7 +143,7 @@ args.num_inputs = num_inputs
 # Hard attention
 if args.hard_attn and args.commnet:
     # add comm_action as last dim in actions
-    args.num_actions = [*args.num_actions, 2]
+    args.num_actions = [args.num_actions[0], 2]
     args.dim_actions = env.dim_actions + 1
 
 # Recurrence
@@ -204,6 +204,8 @@ if args.plot:
     vis = visdom.Visdom(env=args.plot_env)
 
 def run(num_epochs):
+    # print(num_epochs)   # This is the one I am controlling
+    # print(args.epoch_size) # This is defaulting to 10
     for ep in range(num_epochs):
         epoch_begin_time = time.time()
         stat = dict()
@@ -214,6 +216,12 @@ def run(num_epochs):
             merge_stat(s, stat)
             trainer.display = False
 
+        # print("Total Stats")
+        # print(stat)
+
+        stat['success'] = float(stat['success'])
+        stat['steps_taken'] = float(stat['steps_taken'])
+
         epoch_time = time.time() - epoch_begin_time
         epoch = len(log['epoch'].data) + 1
         for k, v in log.items():
@@ -223,13 +231,13 @@ def run(num_epochs):
                 if k in stat and v.divide_by is not None and stat[v.divide_by] > 0:
                     stat[k] = stat[k] / stat[v.divide_by]
                 v.data.append(stat.get(k, 0))
-
+        
         np.set_printoptions(precision=2)
 
         print('Epoch {}\tReward {}\tTime {:.2f}s'.format(
                 epoch, stat['reward'], epoch_time
         ))
-
+        
         if 'enemy_reward' in stat.keys():
             print('Enemy-Reward: {}'.format(stat['enemy_reward']))
         if 'add_rate' in stat.keys():
@@ -258,14 +266,23 @@ def run(num_epochs):
             save(args.save)
 
 def save(path):
+    if args.env_name == "predator_prey":
+        filepath = "Grids/Info_"+path+"/Model_"+path
+    else:
+        filepath = path
     d = dict()
     d['policy_net'] = policy_net.state_dict()
     d['log'] = log
     d['trainer'] = trainer.state_dict()
-    torch.save(d, path)
+    torch.save(d, filepath)
 
 def load(path):
-    d = torch.load(path)
+    if args.env_name == "predator_prey":
+        filepath = "Grids/Info_"+path+"/Model_"+path
+    else:
+        filepath = path
+    print(filepath)
+    d = torch.load(filepath)
     # log.clear()
     policy_net.load_state_dict(d['policy_net'])
     log.update(d['log'])
