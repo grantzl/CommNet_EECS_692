@@ -1,19 +1,5 @@
 # CommNet+: EECS 692 Team 3 2022
-This is a significantly modified version of the IC3Net code repository.
-
-# IC3Net
-This repository contains reference implementation for IC3Net paper (accepted to ICLR 2019), **Learning when to communicate at scale in multiagent cooperative and competitive tasks**, available at [https://arxiv.org/abs/1812.09755](https://arxiv.org/abs/1812.09755)
-
-Github: https://github.com/ic3net/ic3net#start-of-content
-
-```
-@article{singh2018learning,
-  title={Learning when to Communicate at Scale in Multiagent Cooperative and Competitive Tasks},
-  author={Singh, Amanpreet and Jain, Tushar and Sukhbaatar, Sainbayar},
-  journal={arXiv preprint arXiv:1812.09755},
-  year={2018}
-}
-```
+This is a significantly modified version of the IC3Net code repository referenced at the bottom. Added functionality and easy level editing.
 
 ## Installation
 This code repository is designed to function on python 2.7.
@@ -66,3 +52,19 @@ then add the following arguments to the main run: --plot --plot_env main
 You can use the --display argument to visualize one training batch per epoch
 
 ### Traffic Junction
+
+
+
+# IC3Net
+This repository contains reference implementation for IC3Net paper (accepted to ICLR 2019), **Learning when to communicate at scale in multiagent cooperative and competitive tasks**, available at [https://arxiv.org/abs/1812.09755](https://arxiv.org/abs/1812.09755)
+
+Github: https://github.com/ic3net/ic3net#start-of-content
+
+```
+@article{singh2018learning,
+  title={Learning when to Communicate at Scale in Multiagent Cooperative and Competitive Tasks},
+  author={Singh, Amanpreet and Jain, Tushar and Sukhbaatar, Sainbayar},
+  journal={arXiv preprint arXiv:1812.09755},
+  year={2018}
+}
+```
