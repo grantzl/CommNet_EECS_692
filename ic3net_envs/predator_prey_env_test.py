@@ -49,6 +49,7 @@ class PredatorPreyEnv(gym.Env):
         self.SWITCH_CLASS = 9
         self.PLATE_CLASS = 11
         self.DISTRACTOR_CLASS = 13
+        self.SYNC_CLASS = 15
         self.TIMESTEP_PENALTY = -0.05
         self.PREY_REWARD = 0
         self.POS_PREY_REWARD = 0.05
@@ -87,6 +88,8 @@ class PredatorPreyEnv(gym.Env):
                          help="Whether prey can communicate.")
         env.add_argument('--load_grid', type=str, default="5x5_PP.csv",
                          help="Load a pre-made grid csv file")
+        env.add_argument('--task_type', type=str, default="default",
+                         help="Change functionality and reward functions for specific tasks")
 
     def multi_agent_init(self, args):
 
@@ -99,6 +102,8 @@ class PredatorPreyEnv(gym.Env):
         self.npredator = args.nfriendly
         self.dims = dims = (self.dim, self.dim_col)
         self.stay = not args.no_stay
+        self.task_type = args.task_type
+        self.task_count = 0
 
         if args.moving_prey:
             self.moving_prey = True
@@ -127,10 +132,11 @@ class PredatorPreyEnv(gym.Env):
         self.DOOR_CLASS += self.BASE
         self.SWITCH_CLASS += self.BASE
         self.PLATE_CLASS += self.BASE
+        self.SYNC_CLASS += self.BASE
         self.DISTRACTOR_CLASS += self.BASE
 
         # Setting max vocab size for 1-hot encoding
-        self.vocab_size = self.BASE + 14
+        self.vocab_size = self.BASE + 17
         #          predator + prey + grid + outside
 
         # Observation for each agent will be vision * vision ndarray
@@ -227,11 +233,13 @@ class PredatorPreyEnv(gym.Env):
         self.empty_bool_base_grid = self._onehot_initialization(self.grid)
 
     def _set_grid_2(self):
+        self.task_count = 0
         self.grid2 = np.array(self.ref_grid, copy=True)
         self.wall_loc = self.wall_loc_ref[:]
         self.door_loc = self.door_loc_ref[:]
         self.switch_loc = self.switch_loc_ref[:]
         self.plate_loc = self.plate_loc_ref[:]
+        self.sync_loc = self.sync_loc_ref[:]
         self.distract_loc = self.distract_loc_ref[:]
         self.predator_loc = []
         self.prey_loc = []
@@ -247,6 +255,9 @@ class PredatorPreyEnv(gym.Env):
             p[2] = 0
         for p in self.plate_loc:
             p[2] = 0
+        for p in self.sync_loc:
+            p[2] = 0
+            p[4] = 0
         self.predator_loc = np.vstack(self.predator_loc)
         self.prey_loc = np.vstack(self.prey_loc)
 
@@ -267,6 +278,7 @@ class PredatorPreyEnv(gym.Env):
         self.door_loc_ref = []
         self.switch_loc_ref = []
         self.plate_loc_ref = []
+        self.sync_loc_ref = []
         self.distract_loc_ref = []
         self.agent_spawns = []
         self.prey_spawns = []
@@ -287,6 +299,9 @@ class PredatorPreyEnv(gym.Env):
                     if val[0] == "L":
                         self.plate_loc_ref.append([i,j,0,int(val[1])])
                         ref_grid_str[i][j] = str(self.PLATE_CLASS)
+                    if val[0] == "Y":
+                        self.sync_loc_ref.append([i,j,0,int(val[1]),0])
+                        ref_grid_str[i][j] = str(self.SYNC_CLASS)
                     if val == "W":
                         self.wall_loc_ref.append([i,j])
                         ref_grid_str[i][j] = str(self.OUTSIDE_CLASS)
@@ -329,8 +344,11 @@ class PredatorPreyEnv(gym.Env):
         for i, p in enumerate(self.plate_loc):
             self.bool_base_grid[p[0] + self.vision, p[1] + self.vision, self.PLATE_CLASS+p[2]] += 1
 
+        for i, p in enumerate(self.sync_loc):
+            self.bool_base_grid[p[0] + self.vision, p[1] + self.vision, self.SYNC_CLASS+p[2]] += 1
+
         for i, p in enumerate(self.distract_loc):
-            self.bool_base_grid[p[0] + self.vision, p[1] + self.vision, self.OUTSIDE_CLASS] += 1
+            self.bool_base_grid[p[0] + self.vision, p[1] + self.vision, self.DISTRACT_CLASS] += 1
 
         obs = []
         for p in self.predator_loc:
@@ -372,12 +390,33 @@ class PredatorPreyEnv(gym.Env):
             for pr in self.predator_loc:
                 if pr[0] == p[0] and pr[1] == p[1]:
                     p[2] = 1
-            self.grid2[p[0]][p[1]] = self.SWITCH_CLASS+p[2]
+            self.grid2[p[0]][p[1]] = self.PLATE_CLASS+p[2]
             if prev_state != p[2]:
                 for d in self.door_loc:
                     if d[3] == p[3]:
                         d[2] = p[2]
                         self.grid2[d[0]][d[1]] = self.DOOR_CLASS+d[2]
+
+        # This is the synchronized plate and door toggle
+        if len(self.sync_loc) > 0:
+            for p in self.sync_loc:
+                p[4] = p[2]
+                p[2] = 0
+                for pr in self.predator_loc:
+                    if pr[0] == p[0] and pr[1] == p[1]:
+                        p[2] = 1
+                self.grid2[p[0]][p[1]] = self.SYNC_CLASS+p[2]
+            door_open = True
+            for p in self.sync_loc:
+                if p[2] == 0 or p[4] == 1:
+                    door_open = False
+            if door_open:
+                for d in self.door_loc:
+                    if d[3] == self.sync_loc[0][3]:
+                        d[2] = 1
+                        self.grid2[d[0]][d[1]] = self.DOOR_CLASS+d[2]
+                        # print("Door Opening")
+                        # print(p)
 
     def movement(self,act,agent_loc):
         [y,x] = agent_loc[:]
@@ -446,21 +485,24 @@ class PredatorPreyEnv(gym.Env):
 
         on_prey = np.where(np.all(self.predator_loc == self.prey_loc,axis=1))[0]
         nb_predator_on_prey = on_prey.size
-
+        
         if self.mode == 'cooperative':
             reward[on_prey] = self.POS_PREY_REWARD * nb_predator_on_prey
         elif self.mode == 'competitive':
             if nb_predator_on_prey:
                 reward[on_prey] = self.POS_PREY_REWARD / nb_predator_on_prey
         elif self.mode == 'mixed':
-            reward[on_prey] = self.PREY_REWARD
+            if self.task_type == "default":
+                reward[on_prey] = self.PREY_REWARD
+            elif self.task_count == 1:
+                reward[on_prey] = self.PREY_REWARD
         else:
             raise RuntimeError("Incorrect mode, Available modes: [cooperative|competitive|mixed]")
 
         self.reached_prey[on_prey] = 1
 
-        if np.all(self.reached_prey == 1) and self.mode == 'mixed':
-            self.episode_over = True
+        # if np.all(self.reached_prey == 1) and self.mode == 'mixed':
+        #     self.episode_over = True
             
         # Prey reward
         if nb_predator_on_prey == 0:
@@ -470,13 +512,31 @@ class PredatorPreyEnv(gym.Env):
             reward[self.npredator:] = 0
 
         # Success ratio
-        if self.mode != 'competitive':
-            if nb_predator_on_prey == self.npredator:
-                self.episode_over = True
-                self.stat['success'] = 1
+        if self.task_type == "sequence":
+            if nb_predator_on_prey >= (self.npredator-len(self.plate_loc)):
+                if self.task_count == 0:
+                    self.prey_loc = []
+                    idx = np.random.choice(len(self.agent_spawns),self.nprey)
+                    for i in idx:
+                        self.prey_loc.append(self.agent_spawns[i])
+                    self.task_count = 1
+                    self.stat['success'] = 0.0
+                    #print("Task 1 Complete")
+                else:
+                    self.episode_over = True
+                    self.stat['success'] = 1
+                    #print("Task 2 Complete")
             else:
-                self.stat['success'] = 0
-        return reward
+                self.stat['success'] = self.task_count * 0.0
+            return reward
+        else:
+            if self.mode != 'competitive':
+                if nb_predator_on_prey >= (self.npredator-len(self.plate_loc)):
+                    self.episode_over = True
+                    self.stat['success'] = 1
+                else:
+                    self.stat['success'] = 0
+            return reward
 
     def reward_terminal(self):
         return np.zeros_like(self._get_reward())
@@ -557,6 +617,18 @@ class PredatorPreyEnv(gym.Env):
                 else:
                     grid[p[0]][p[1]] = 'LO'
 
+        for p in self.sync_loc:
+            if p[2] == 0:
+                if grid[p[0]][p[1]] != 0:
+                    grid[p[0]][p[1]] = str(grid[p[0]][p[1]]) + 'YC'
+                else:
+                    grid[p[0]][p[1]] = 'YC'
+            else:
+                if grid[p[0]][p[1]] != 0:
+                    grid[p[0]][p[1]] = str(grid[p[0]][p[1]]) + 'YO'
+                else:
+                    grid[p[0]][p[1]] = 'YO'
+
         for p in self.distract_loc:
             if grid[p[0]][p[1]] != 0:
                 grid[p[0]][p[1]] = str(grid[p[0]][p[1]]) + 'R'
@@ -587,6 +659,10 @@ class PredatorPreyEnv(gym.Env):
                         self.stdscr.addstr(row_num, idx * 4, 'L'.center(3), curses.color_pair(6))
                     elif 'LO' in item:
                         self.stdscr.addstr(row_num, idx * 4, 'L'.center(3), curses.color_pair(2))
+                    elif 'YC' in item:
+                        self.stdscr.addstr(row_num, idx * 4, 'Y'.center(3), curses.color_pair(6))
+                    elif 'YO' in item:
+                        self.stdscr.addstr(row_num, idx * 4, 'Y'.center(3), curses.color_pair(2))
                     else:
                         self.stdscr.addstr(row_num, idx * 4, item.center(3),  curses.color_pair(7))
                 else:

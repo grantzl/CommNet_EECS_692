@@ -1,0 +1,8 @@
+Task:		10x10 Heterogenous Task
+Grid:		Grid_10x10_HTask.csv
+Dim:		10x10
+Nagents:	5
+Max Steps:	100
+Vision:		2
+NEpochs:	1000
+Model:		CommNet

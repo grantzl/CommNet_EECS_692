@@ -1,0 +1,12 @@
+Task:		9x5 Heterogenous Agents
+Grid:		Grid_9x5_HAgents.csv
+Dim:		9x5
+Nagents:	2
+Max Steps:	50
+Vision:		2
+NEpochs:	1000
+Model:		CommNet
+
+NOT IMPLIMENTED
+A1 has full vision of all the prey, vision = 6
+A2 has no vision, vision = 0
