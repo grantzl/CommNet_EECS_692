@@ -75,6 +75,8 @@ class TrafficJunctionEnv(gym.Env):
                          help="Difficulty level, easy|medium|hard")
         env.add_argument('--vocab_type', type=str, default='bool',
                          help="Type of location vector to use, bool|scalar")
+        env.add_argument('--roads', type=int, default=2,
+                         help="Number of intersections to use")
 
 
     def multi_agent_init(self, args):
@@ -117,6 +119,7 @@ class TrafficJunctionEnv(gym.Env):
         nroad = {'easy':2,
                 'medium':4,
                 'hard':8}
+        nroad[difficulty] = args.roads
 
         dim_sum = dims[0] + dims[1]
         base = {'easy':   dim_sum,
@@ -387,7 +390,9 @@ class TrafficJunctionEnv(gym.Env):
 
                 # set its start loc
                 self.car_route_loc[idx] = 0
-                self.car_loc[idx] = routes[p_i][0]
+                #print(routes[p_i][0])
+                #print(self.car_loc[idx])
+                self.car_loc[idx] = routes[p_i][0][0]
 
                 # increase count
                 self.cars_in_sys += 1
@@ -401,11 +406,11 @@ class TrafficJunctionEnv(gym.Env):
 
         # 0 refers to UP to DOWN, type 0
         full = [(i, w//2) for i in range(h)]
-        self.routes['TOP'].append(np.array([*full]))
+        self.routes['TOP'].append(np.array([full]))
 
         # 1 refers to LEFT to RIGHT, type 0
         full = [(h//2, i) for i in range(w)]
-        self.routes['LEFT'].append(np.array([*full]))
+        self.routes['LEFT'].append(np.array([full]))
 
         self.routes = list(self.routes.values())
 
@@ -426,58 +431,58 @@ class TrafficJunctionEnv(gym.Env):
 
         # 0 refers to UP to DOWN, type 0
         full = [(i, w//2-1) for i in range(h)]
-        self.routes['TOP'].append(np.array([*full]))
+        self.routes['TOP'].append(np.array([full]))
 
         # 1 refers to UP to LEFT, type 1
         first_half = full[:h//2]
         second_half = [(h//2 - 1, i) for i in range(w//2 - 2,-1,-1) ]
-        self.routes['TOP'].append(np.array([*first_half, *second_half]))
+        self.routes['TOP'].append(np.array([first_half, second_half]))
 
         # 2 refers to UP to RIGHT, type 2
         second_half = [(h//2, i) for i in range(w//2-1, w) ]
-        self.routes['TOP'].append(np.array([*first_half, *second_half]))
+        self.routes['TOP'].append(np.array([first_half, second_half]))
 
 
         # 3 refers to LEFT to RIGHT, type 0
         full = [(h//2, i) for i in range(w)]
-        self.routes['LEFT'].append(np.array([*full]))
+        self.routes['LEFT'].append(np.array([full]))
 
         # 4 refers to LEFT to DOWN, type 1
         first_half = full[:w//2]
         second_half = [(i, w//2 - 1) for i in range(h//2+1, h)]
-        self.routes['LEFT'].append(np.array([*first_half, *second_half]))
+        self.routes['LEFT'].append(np.array([first_half, second_half]))
 
         # 5 refers to LEFT to UP, type 2
         second_half = [(i, w//2) for i in range(h//2, -1,-1) ]
-        self.routes['LEFT'].append(np.array([*first_half, *second_half]))
+        self.routes['LEFT'].append(np.array([first_half, second_half]))
 
 
         # 6 refers to DOWN to UP, type 0
         full = [(i, w//2) for i in range(h-1,-1,-1)]
-        self.routes['DOWN'].append(np.array([*full]))
+        self.routes['DOWN'].append(np.array([full]))
 
         # 7 refers to DOWN to RIGHT, type 1
         first_half = full[:h//2]
         second_half = [(h//2, i) for i in range(w//2+1,w)]
-        self.routes['DOWN'].append(np.array([*first_half, *second_half]))
+        self.routes['DOWN'].append(np.array([first_half, second_half]))
 
         # 8 refers to DOWN to LEFT, type 2
         second_half = [(h//2-1, i) for i in range(w//2,-1,-1)]
-        self.routes['DOWN'].append(np.array([*first_half, *second_half]))
+        self.routes['DOWN'].append(np.array([first_half, second_half]))
 
 
         # 9 refers to RIGHT to LEFT, type 0
         full = [(h//2-1, i) for i in range(w-1,-1,-1)]
-        self.routes['RIGHT'].append(np.array([*full]))
+        self.routes['RIGHT'].append(np.array([full]))
 
         # 10 refers to RIGHT to UP, type 1
         first_half = full[:w//2]
         second_half = [(i, w//2) for i in range(h//2 -2, -1,-1)]
-        self.routes['RIGHT'].append(np.array([*first_half, *second_half]))
+        self.routes['RIGHT'].append(np.array([first_half, second_half]))
 
         # 11 refers to RIGHT to DOWN, type 2
         second_half = [(i, w//2-1) for i in range(h//2-1, h)]
-        self.routes['RIGHT'].append(np.array([*first_half, *second_half]))
+        self.routes['RIGHT'].append(np.array([first_half, second_half]))
 
 
         # PATHS_i: 0 to 11
