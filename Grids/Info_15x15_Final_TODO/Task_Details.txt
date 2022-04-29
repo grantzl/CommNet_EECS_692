@@ -1,0 +1,11 @@
+Task:		15x15 Final Level
+Grid:		Grid_15x15_Final.csv
+Dim:		15x15
+Nagents:	5
+Max Steps:	300
+Vision:		2
+NEpochs:	1000
+Model:		CommNet
+
+NOT IMPLIMENTED
+Vary the agents vision

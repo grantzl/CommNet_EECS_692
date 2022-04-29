@@ -1,0 +1,10 @@
+Task:		11x11 Boss Level
+Grid:		Grid_11x10_BLevel.csv
+Dim:		11x11
+Nagents:	5
+Max Steps:	200
+Vision:		2
+NEpochs:	500
+Model:		CommNet
+
+Additional Terminal Commands: --moving_prey --task_type sequence

@@ -1,13 +1,8 @@
-Task:		7x7 PP
-Grid:		Grid_7x7_PP.csv
+Task:		7x7 Switch Maze
+Grid:		Grid_7x7_SMaze.csv
 Dim:		7x7
-Nagents:	3
+Nagents:	5
 Max Steps:	100
 Vision:		2
-NEpochs:	300
+NEpochs:	200
 Model:		CommNet
-
-Success Function:
-nb_predator_on_prey == self.npredator
-
-

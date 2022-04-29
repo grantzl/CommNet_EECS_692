@@ -1,0 +1,8 @@
+Task:		5x4 Synchronization Task
+Grid:		Grid_5x4_synch.csv
+Dim:		5x4
+Nagents:	3
+Max Steps:	30
+Vision:		2
+NEpochs:	1000
+Model:		CommNet
