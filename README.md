@@ -52,7 +52,7 @@ then add the following arguments to the main run: --plot --plot_env main
 You can use the --display argument to visualize one training batch per epoch
 
 ### Traffic Junction
-
+Feel free to modify the parameters as needed, the ones within scalability.ipynb are the recommended ones from the CommNet repository. Plotting can be seen by using the --plot flag, and going to the URL printed out in the "Setting Up Visdom" section. The last three cells in the notebook handle linearly increasing the number of junctions & agents using a bash for-loop. The plot_scalability notebook takes in .txt files in the formal "#;Success" to plot the success rate over the number of agents/junctions.
 
 
 # IC3Net
